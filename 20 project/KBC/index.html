@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBC Quiz Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .celebration-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            animation: fall linear infinite;
+        }
+
+        .confetti:nth-child(odd) {
+            background: #ff6b6b;
+            width: 8px;
+            height: 8px;
+            animation-delay: -0.5s;
+        }
+
+        .confetti:nth-child(3n) {
+            background: #4CAF50;
+            width: 6px;
+            height: 6px;
+            animation-delay: -1s;
+        }
+
+        .confetti:nth-child(4n) {
+            background: #2196F3;
+            border-radius: 50%;
+        }
+
+        .confetti:nth-child(5n) {
+            background: #FF9800;
+            transform: rotate(45deg);
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+            padding: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            flex: 1;
+            max-width: 900px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            border: 2px solid #ffd700;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .prize-display {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            color: #000;
+            border-radius: 15px;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .question-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .question-number {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .question {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid #ffd700;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .option {
+            padding: 15px 20px;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: left;
+            min-height: 60px;
+        }
+
+        .option:hover {
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .option.selected {
+            background: #ffd700;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .option.correct {
+            background: #4CAF50;
+            color: #fff;
+            animation: correctAnswer 1s ease-in-out;
+        }
+
+        .option.wrong {
+            background: #f44336;
+            color: #fff;
+            animation: wrongAnswer 0.5s ease-in-out;
+        }
+
+        @keyframes correctAnswer {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongAnswer {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .lifelines {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .lifeline {
+            padding: 10px 16px;
+            background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+            border: none;
+            border-radius: 25px;
+            color: #fff;
+            cursor: pointer;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .lifeline:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .lifeline:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            margin: 8px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            color: #000;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #666, #555);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, #777, #666);
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .final-score {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            color: #ffd700;
+            margin: 20px 0;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .game-container {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 10px;
+            }
+
+            .game-container {
+                padding: 15px;
+            }
+
+            .options {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .option {
+                padding: 12px 15px;
+                min-height: 50px;
+            }
+
+            .lifelines {
+                gap: 10px;
+            }
+
+            .lifeline {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+
+            .controls {
+                margin-top: 20px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                margin: 5px;
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 12px;
+                border-radius: 15px;
+            }
+
+            .question {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .option {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+                min-height: 45px;
+            }
+
+            .lifelines {
+                gap: 8px;
+            }
+
+            .lifeline {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+
+            .prize-display {
+                font-size: 1.2rem;
+                padding: 12px;
+            }
+        }
+
+        /* Landscape mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .prize-display {
+                font-size: 1rem;
+                padding: 10px;
+                margin: 15px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="celebration-container" id="celebrationContainer"></div>
+    
+    <div class="main-container">
+        <div class="game-container">
+        <div class="header">
+            <h1 class="title">🏆 KBC Quiz Game 🏆</h1>
+        </div>
+
+        <div class="prize-ladder">
+            <h3>Prize Money</h3>
+            <div id="prizeList"></div>
+        </div>
+
+        <div id="gameContent">
+            <div class="prize-display" id="prizeDisplay">Prize Money: ₹0</div>
+            
+            <div class="question-section">
+                <div class="question-number" id="questionNumber">Question 1 of 15</div>
+                <div class="question" id="questionText">Click "Start Game" to begin your journey!</div>
+            </div>
+
+            <div class="options" id="optionsContainer" style="display: none;">
+                <div class="option" onclick="selectOption(0)">
+                    <span id="option0">A: Option 1</span>
+                </div>
+                <div class="option" onclick="selectOption(1)">
+                    <span id="option1">B: Option 2</span>
+                </div>
+                <div class="option" onclick="selectOption(2)">
+                    <span id="option2">C: Option 3</span>
+                </div>
+                <div class="option" onclick="selectOption(3)">
+                    <span id="option3">D: Option 4</span>
+                </div>
+            </div>
+
+            <div class="lifelines" id="lifelinesContainer" style="display: none;">
+                <button class="lifeline" id="fiftyFifty" onclick="useFiftyFifty()">50:50</button>
+                <button class="lifeline" id="audiencePoll" onclick="useAudiencePoll()">👥 Audience Poll</button>
+                <button class="lifeline" id="phoneAFriend" onclick="usePhoneAFriend()">📞 Phone a Friend</button>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" id="startBtn" onclick="startGame()">Start Game</button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" style="display: none;">Next Question</button>
+                <button class="btn btn-secondary" id="quitBtn" onclick="quitGame()" style="display: none;">Quit & Take Money</button>
+                <button class="btn btn-secondary" onclick="restartGame()">Restart Game</button>
+            </div>
+            </div>
+
+            <div id="gameOverScreen" style="display: none;">
+                <div class="game-over">
+                    <h2>🎉 Game Over! 🎉</h2>
+                    <div class="final-score" id="finalScore">You won: ₹0</div>
+                    <p id="gameOverMessage">Thanks for playing!</p>
+                    <button class="btn btn-primary" onclick="restartGame()">Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const questions = [
+            {
+                question: "What is the capital of India?",
+                options: ["Mumbai", "New Delhi", "Kolkata", "Chennai"],
+                correct: 1
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Venus", "Mars", "Jupiter", "Saturn"],
+                correct: 1
+            },
+            {
+                question: "Who wrote the Indian national anthem?",
+                options: ["Rabindranath Tagore", "Bankim Chandra Chatterjee", "Sarojini Naidu", "Mahatma Gandhi"],
+                correct: 0
+            },
+            {
+                question: "What is the largest ocean on Earth?",
+                options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
+                correct: 3
+            },
+            {
+                question: "In which year did India gain independence?",
+                options: ["1945", "1947", "1948", "1950"],
+                correct: 1
+            },
+            {
+                question: "What is the chemical symbol for Gold?",
+                options: ["Go", "Gd", "Au", "Ag"],
+                correct: 2
+            },
+            {
+                question: "Which is the longest river in the world?",
+                options: ["Amazon River", "Nile River", "Yangtze River", "Mississippi River"],
+                correct: 1
+            },
+            {
+                question: "Who is known as the Father of the Indian Constitution?",
+                options: ["Mahatma Gandhi", "Jawaharlal Nehru", "Dr. B.R. Ambedkar", "Sardar Patel"],
+                correct: 2
+            },
+            {
+                question: "What is the hardest natural substance on Earth?",
+                options: ["Gold", "Iron", "Diamond", "Silver"],
+                correct: 2
+            },
+            {
+                question: "Which gas makes up most of Earth's atmosphere?",
+                options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"],
+                correct: 2
+            },
+            {
+                question: "Who painted the Mona Lisa?",
+                options: ["Vincent van Gogh", "Leonardo da Vinci", "Pablo Picasso", "Michelangelo"],
+                correct: 1
+            },
+            {
+                question: "What is the smallest country in the world?",
+                options: ["Monaco", "Nauru", "Vatican City", "San Marino"],
+                correct: 2
+            },
+            {
+                question: "Which element has the atomic number 1?",
+                options: ["Helium", "Hydrogen", "Lithium", "Beryllium"],
+                correct: 1
+            },
+            {
+                question: "In which city would you find Machu Picchu?",
+                options: ["Cusco Region, Peru", "La Paz, Bolivia", "Quito, Ecuador", "Bogotá, Colombia"],
+                correct: 0
+            },
+            {
+                question: "What is the speed of light in vacuum?",
+                options: ["299,792,458 m/s", "300,000,000 m/s", "299,000,000 m/s", "298,792,458 m/s"],
+                correct: 0
+            }
+        ];
+
+        const prizeMoney = [
+            "₹1,000", "₹2,000", "₹3,000", "₹5,000", "₹10,000",
+            "₹20,000", "₹40,000", "₹80,000", "₹1,60,000", "₹3,20,000",
+            "₹6,40,000", "₹12,50,000", "₹25,00,000", "₹50,00,000", "₹1,00,00,000"
+        ];
+
+        let currentQuestion = 0;
+        let selectedOption = null;
+        let gameStarted = false;
+        let gameEnded = false;
+        let lifelines = {
+            fiftyFifty: true,
+            audiencePoll: true,
+            phoneAFriend: true
+        };
+
+        // Initialize game
+        function initializeGame() {
+            updatePrizeDisplay();
+        }
+
+        function updatePrizeDisplay() {
+            const prizeDisplay = document.getElementById('prizeDisplay');
+            if (currentQuestion === 0 && !gameStarted) {
+                prizeDisplay.textContent = 'Prize Money: ₹0';
+            } else {
+                const currentPrize = currentQuestion < prizeMoney.length ? prizeMoney[currentQuestion] : prizeMoney[prizeMoney.length - 1];
+                prizeDisplay.textContent = `Prize Money: ${currentPrize}`;
+            }
+        }
+
+        function startGame() {
+            gameStarted = true;
+            gameEnded = false;
+            currentQuestion = 0;
+            selectedOption = null;
+            
+            // Reset lifelines
+            lifelines = {
+                fiftyFifty: true,
+                audiencePoll: true,
+                phoneAFriend: true
+            };
+            
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('optionsContainer').style.display = 'grid';
+            document.getElementById('lifelinesContainer').style.display = 'flex';
+            document.getElementById('quitBtn').style.display = 'inline-block';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            resetLifelineButtons();
+            updatePrizeDisplay();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestion >= questions.length) {
+                endGame(true);
+                return;
+            }
+
+            const q = questions[currentQuestion];
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+            document.getElementById('questionText').textContent = q.question;
+            
+            for (let i = 0; i < 4; i++) {
+                const option = document.getElementById(`option${i}`);
+                const letters = ['A', 'B', 'C', 'D'];
+                option.textContent = `${letters[i]}: ${q.options[i]}`;
+                option.parentElement.className = 'option';
+                option.parentElement.style.display = 'flex';
+            }
+            
+            selectedOption = null;
+            document.getElementById('nextBtn').style.display = 'none';
+            updatePrizeDisplay();
+        }
+
+        function selectOption(index) {
+            if (selectedOption !== null || gameEnded) return;
+            
+            selectedOption = index;
+            const options = document.querySelectorAll('.option');
+            options[index].classList.add('selected');
+            
+            // Show result after 1 second
+            setTimeout(() => {
+                showResult();
+            }, 1000);
+        }
+
+        function showResult() {
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            // Show correct answer
+            options[q.correct].classList.add('correct');
+            
+            // Show wrong answer if selected
+            if (selectedOption !== q.correct) {
+                options[selectedOption].classList.add('wrong');
+                setTimeout(() => {
+                    endGame(false);
+                }, 2000);
+            } else {
+                // Trigger celebration for correct answer
+                showCelebration();
+                currentQuestion++;
+                setTimeout(() => {
+                    if (currentQuestion >= questions.length) {
+                        endGame(true);
+                    } else {
+                        document.getElementById('nextBtn').style.display = 'inline-block';
+                    }
+                }, 2000);
+            }
+        }
+
+        function showCelebration() {
+            const celebrationContainer = document.getElementById('celebrationContainer');
+            celebrationContainer.innerHTML = '';
+            
+            // Create confetti pieces
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                celebrationContainer.appendChild(confetti);
+            }
+            
+            // Remove confetti after 2 seconds
+            setTimeout(() => {
+                celebrationContainer.innerHTML = '';
+            }, 2000);
+        }
+
+        function nextQuestion() {
+            loadQuestion();
+        }
+
+        function quitGame() {
+            endGame(false, true);
+        }
+
+        function endGame(won, quit = false) {
+            gameEnded = true;
+            let winnings = 0;
+            
+            if (won) {
+                winnings = currentQuestion > 0 ? prizeMoney[currentQuestion - 1] : "₹0";
+                document.getElementById('gameOverMessage').textContent = "🎉 Congratulations! You're a millionaire! 🎉";
+            } else if (quit) {
+                winnings = currentQuestion > 0 ? prizeMoney[currentQuestion - 1] : "₹0";
+                document.getElementById('gameOverMessage').textContent = "You chose to quit. Smart move!";
+            } else {
+                winnings = "₹0";
+                document.getElementById('gameOverMessage').textContent = "Better luck next time!";
+            }
+            
+            document.getElementById('finalScore').textContent = `You won: ${winnings}`;
+            document.getElementById('gameOverScreen').style.display = 'block';
+            document.getElementById('optionsContainer').style.display = 'none';
+            document.getElementById('lifelinesContainer').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('quitBtn').style.display = 'none';
+        }
+
+        function restartGame() {
+            currentQuestion = 0;
+            selectedOption = null;
+            gameStarted = false;
+            gameEnded = false;
+            
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('optionsContainer').style.display = 'none';
+            document.getElementById('lifelinesContainer').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('quitBtn').style.display = 'none';
+            
+            document.getElementById('questionNumber').textContent = 'Question 1 of 15';
+            document.getElementById('questionText').textContent = 'Click "Start Game" to begin your journey!';
+            
+            updatePrizeDisplay();
+        }
+
+        // Lifeline functions
+        function useFiftyFifty() {
+            if (!lifelines.fiftyFifty || selectedOption !== null) return;
+            
+            lifelines.fiftyFifty = false;
+            document.getElementById('fiftyFifty').disabled = true;
+            
+            const q = questions[currentQuestion];
+            const correctIndex = q.correct;
+            const options = document.querySelectorAll('.option');
+            
+            let removed = 0;
+            for (let i = 0; i < 4; i++) {
+                if (i !== correctIndex && removed < 2) {
+                    options[i].style.display = 'none';
+                    removed++;
+                }
+            }
+        }
+
+        function useAudiencePoll() {
+            if (!lifelines.audiencePoll || selectedOption !== null) return;
+            
+            lifelines.audiencePoll = false;
+            document.getElementById('audiencePoll').disabled = true;
+            
+            const q = questions[currentQuestion];
+            const correctIndex = q.correct;
+            
+            // Generate random percentages favoring correct answer
+            let percentages = [0, 0, 0, 0];
+            percentages[correctIndex] = Math.floor(Math.random() * 30) + 50; // 50-80%
+            
+            let remaining = 100 - percentages[correctIndex];
+            for (let i = 0; i < 4; i++) {
+                if (i !== correctIndex) {
+                    percentages[i] = Math.floor(Math.random() * remaining / 2);
+                    remaining -= percentages[i];
+                }
+            }
+            percentages[0] += remaining; // Add remaining to first option
+            
+            const letters = ['A', 'B', 'C', 'D'];
+            let pollResult = "Audience Poll Results:\n";
+            for (let i = 0; i < 4; i++) {
+                pollResult += `${letters[i]}: ${percentages[i]}%\n`;
+            }
+            
+            alert(pollResult);
+        }
+
+        function usePhoneAFriend() {
+            if (!lifelines.phoneAFriend || selectedOption !== null) return;
+            
+            lifelines.phoneAFriend = false;
+            document.getElementById('phoneAFriend').disabled = true;
+            
+            const q = questions[currentQuestion];
+            const correctIndex = q.correct;
+            const letters = ['A', 'B', 'C', 'D'];
+            
+            // 80% chance friend gives correct answer
+            const friendConfidence = Math.random();
+            let friendAnswer;
+            
+            if (friendConfidence > 0.2) {
+                friendAnswer = letters[correctIndex];
+            } else {
+                friendAnswer = letters[Math.floor(Math.random() * 4)];
+            }
+            
+            alert(`Your friend says: "I think the answer is ${friendAnswer}, but I'm not 100% sure!"`);
+        }
+
+        function resetLifelineButtons() {
+            document.getElementById('fiftyFifty').disabled = false;
+            document.getElementById('audiencePoll').disabled = false;
+            document.getElementById('phoneAFriend').disabled = false;
+        }
+
+        // Initialize game
+        initializeGame();
+    </script>
+</body>
+</html>

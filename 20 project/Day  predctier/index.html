@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Next Day Predictor</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: black;
+      color: white;
+    }
+
+    #container {
+      width: 500px;         /* Increased container width */
+      margin: 50px auto;
+      padding: 30px;          /* Increased padding */
+      background-color: #333;
+      border-radius: 10px;     /* Increased border radius */
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); /* Increased shadow */
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px 30px;        /* Increased button padding */
+      border: none;
+      border-radius: 7px;      /* Increased button border radius */
+      cursor: pointer;
+      margin-top: 15px;       /* Increased button margin */
+      font-size: 1.2em;        /* Increased button font size */
+    }
+
+    #processing {
+      margin-top: 25px;       /* Increased processing margin */
+      font-style: italic;
+      font-size: 1.3em;        /* Increased processing font size */
+    }
+
+    #result {
+      margin-top: 30px;       /* Increased result margin */
+      font-weight: bold;
+      font-size: 1.5em;        /* Increased result font size */
+    }
+
+    #daySelect {
+      margin-bottom: 15px;    /* Increased select margin */
+      padding: 8px;           /* Increased select padding */
+      font-size: 1.1em;        /* Increased select font size */
+    }
+
+    h1 {
+      font-size: 2.5em;        /* Increased heading font size */
+      margin-bottom: 20px;    /* Increased heading margin */
+    }
+
+    label {
+      font-size: 1.3em;        /* Increased label font size */
+      display: block;          /* Ensures label is on its own line */
+      margin-bottom: 5px;     /* Added margin below the label */
+    }
+
+  </style>
+</head>
+<body>
+
+<div id="container">
+  <h1>Next Day Predictor</h1>
+
+  <label for="daySelect">Select a Day:</label>
+  <select id="daySelect">
+    <option value="0">Wednesday</option>
+    <option value="1">Thursday</option>
+    <option value="2">Friday</option>
+    <option value="3">Saturday</option>
+    <option value="4">Sunday</option>
+    <option value="5">Monday</option>
+    <option value="6">Tuesday</option>
+  </select>
+
+  <button onclick="predictDay()">Predict Day</button>
+
+  <div id="processing"></div>
+
+  <div id="result"></div>
+</div>
+
+<script>
+function predictDay() {
+    const daySelect = document.getElementById("daySelect");
+    const selectedDaysFromNow = parseInt(daySelect.value);
+    const processingDiv = document.getElementById("processing");
+    const resultDiv = document.getElementById("result");
+
+    resultDiv.textContent = ""; // Clear previous results
+
+    const processingSteps = [
+      "Checking browser...",
+      "Checking your calendar...",
+      "Hacking NASA for data...",
+      "Analyzing Chrome search history...",
+      "Dhoni announces one more IPL match...",
+      "Predicting the day...",
+    ];
+
+    let stepIndex = 0;
+
+    function showNextStep() {
+      if (stepIndex < processingSteps.length) {
+        processingDiv.textContent = processingSteps[stepIndex];
+        stepIndex++;
+        setTimeout(showNextStep, 2500); // Increased delay to 2.5 seconds (2500 ms)
+      } else {
+        // After all processing steps are done:
+
+        const days = ["Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Monday", "Tuesday"]; // Order matches options
+        let nextDayIndex = (selectedDaysFromNow + 1) % 7; // Calculate the *next* day's index
+
+        const targetDayName = days[nextDayIndex]; // Get the next day's name
+
+        processingDiv.textContent = ""; // Clear processing message
+        resultDiv.textContent = "The next day will be: " + targetDayName; // Update result message
+      }
+    }
+
+    showNextStep(); // Start the processing sequence
+}
+</script>
+
+</body>
+</html>

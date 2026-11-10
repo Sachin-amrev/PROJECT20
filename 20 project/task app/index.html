@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" class="transition-colors duration-300">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Task Master</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Toggle dark mode with localStorage
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      html.classList.toggle('dark');
+      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+    }
+
+    // Load dark mode preference on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('theme') === 'dark' || 
+          (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    });
+  </script>
+  <style>
+    .animate-button {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+
+  <!-- Dark mode toggle button -->
+  <div class="fixed top-4 right-4 z-50">
+    <button onclick="toggleDarkMode()" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-full shadow hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+      <span class="block dark:hidden">🌙</span>
+      <span class="hidden dark:block">☀️</span>
+    </button>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 w-11/12 max-w-sm">
+      <h2 class="text-2xl font-bold text-center mb-4">Welcome to Task Master</h2>
+      <form id="user-form">
+        <div class="mb-4">
+          <label for="name" class="block text-sm font-bold mb-1">Name:</label>
+          <input type="text" id="name" placeholder="Enter your name" class="w-full px-4 py-2 rounded bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div class="mb-4">
+          <label for="number" class="block text-sm font-bold mb-1">Number:</label>
+          <input type="text" id="number" placeholder="Enter your number" class="w-full px-4 py-2 rounded bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <button type="submit" id="login-btn" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded animate-button">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div id="app" class="hidden max-w-4xl mx-auto p-6 mt-12 bg-white dark:bg-gray-800 rounded shadow">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold">Task Master</h2>
+      <div class="text-sm text-gray-600 dark:text-gray-300 text-right">
+        <p id="welcome-message" class="mb-2"></p>
+        <button id="logout-btn-under-name" class="px-4 py-1 bg-red-600 hover:bg-red-700 text-white rounded animate-button">Logout</button>
+      </div>
+    </div>
+
+    <ul id="todo-list" class="space-y-2"></ul>
+
+    <div class="flex flex-col sm:flex-row gap-4 mt-6">
+      <input type="text" id="todo-input" placeholder="Add new task" class="flex-1 px-4 py-2 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <button id="add-todo-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded animate-button">Add Task</button>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-4 mt-6">
+      <button id="view-today-tasks-btn" class="w-full sm:w-auto px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded animate-button">View Today's Tasks</button>
+      <button id="view-previous-tasks-btn" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded animate-button">View Previous Tasks</button>
+    </div>
+
+    <div id="previous-tasks" class="hidden mt-6">
+      <h3 class="text-xl font-bold mb-2">Previous Tasks</h3>
+      <ul id="previous-tasks-list" class="space-y-2"></ul>
+    </div>
+
+    <button id="complete-all-tasks-btn" class="mt-6 w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded animate-button">Complete All Tasks</button>
+  </div>
+
+  <script>
+    const modal = document.getElementById('modal');
+    const app = document.getElementById('app');
+    const userForm = document.getElementById('user-form');
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn-under-name');
+
+    let userName = localStorage.getItem('userName');
+    let userNumber = localStorage.getItem('userNumber');
+
+    if (userName && userNumber) {
+      modal.style.display = 'none';
+      app.classList.remove('hidden');
+      document.getElementById('welcome-message').innerHTML = `Welcome, ${userName}!`;
+    }
+
+    userForm.addEventListener('submit', e => e.preventDefault());
+
+    loginBtn.addEventListener('click', () => {
+      const name = document.getElementById('name').value;
+      const number = document.getElementById('number').value;
+      if (name && number) {
+        localStorage.setItem('userName', name);
+        localStorage.setItem('userNumber', number);
+        modal.style.display = 'none';
+        app.classList.remove('hidden');
+        document.getElementById('welcome-message').innerHTML = `Welcome, ${name}!`;
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userNumber');
+      modal.style.display = 'flex';
+      app.classList.add('hidden');
+      document.getElementById('name').value = '';
+      document.getElementById('number').value = '';
+    });
+
+    const getCurrentDate = () => new Date().toISOString().split('T')[0];
+    let todos = JSON.parse(localStorage.getItem(getCurrentDate())) || [];
+
+    const renderTodoList = () => {
+      const todoList = document.getElementById('todo-list');
+      todoList.innerHTML = '';
+      todos.forEach((todo, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <div class="flex justify-between items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="todo-${index}" ${todo.completed ? 'checked disabled' : ''}>
+              <span class="${todo.completed ? 'line-through text-green-400' : ''}">${todo.text}</span>
+            </div>
+            <div class="flex gap-2">
+              <button class="complete-todo px-2 py-1 bg-green-500 text-white rounded text-sm" data-index="${index}" ${todo.completed ? 'disabled' : ''}>Complete</button>
+              <button class="delete-todo px-2 py-1 bg-red-500 text-white rounded text-sm" data-index="${index}">Delete</button>
+            </div>
+          </div>
+        `;
+        todoList.appendChild(li);
+      });
+    };
+
+    renderTodoList();
+
+    document.getElementById('add-todo-btn').addEventListener('click', () => {
+      const input = document.getElementById('todo-input');
+      const text = input.value.trim();
+      if (text) {
+        todos.push({ text, completed: false });
+        localStorage.setItem(getCurrentDate(), JSON.stringify(todos));
+        input.value = '';
+        renderTodoList();
+      }
+    });
+
+    document.getElementById('todo-list').addEventListener('click', e => {
+      if (e.target.classList.contains('complete-todo')) {
+        const index = parseInt(e.target.dataset.index);
+        todos[index].completed = true;
+        localStorage.setItem(getCurrentDate(), JSON.stringify(todos));
+        renderTodoList();
+      } else if (e.target.classList.contains('delete-todo')) {
+        const index = parseInt(e.target.dataset.index);
+        todos.splice(index, 1);
+        localStorage.setItem(getCurrentDate(), JSON.stringify(todos));
+        renderTodoList();
+      }
+    });
+
+    document.getElementById('view-today-tasks-btn').addEventListener('click', () => {
+      document.getElementById('previous-tasks').classList.add('hidden');
+      document.getElementById('todo-list').classList.remove('hidden');
+    });
+
+    document.getElementById('view-previous-tasks-btn').addEventListener('click', () => {
+      const prevList = document.getElementById('previous-tasks-list');
+      prevList.innerHTML = '';
+      document.getElementById('previous-tasks').classList.remove('hidden');
+      document.getElementById('todo-list').classList.add('hidden');
+
+      for (const key in localStorage) {
+        if (!['userName', 'userNumber'].includes(key) && key !== getCurrentDate()) {
+          const tasks = JSON.parse(localStorage.getItem(key));
+          tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.innerHTML = `<div class="flex justify-between items-center p-2 bg-gray-100 dark:bg-gray-700 rounded"><span>${task.text}</span><span class="text-sm">${key}</span></div>`;
+            prevList.appendChild(li);
+          });
+        }
+      }
+    });
+
+    document.getElementById('complete-all-tasks-btn').addEventListener('click', () => {
+      todos.forEach(todo => todo.completed = true);
+      localStorage.setItem(getCurrentDate(), JSON.stringify(todos));
+      renderTodoList();
+    });
+  </script>
+</body>
+</html>
